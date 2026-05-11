@@ -590,7 +590,7 @@
       <p>Pick a niche. We'll surface the top 5 viral trends across Instagram, TikTok & Facebook — then generate your winning content plan.</p>
 
       <div id="no-key-banner" class="no-key-banner" onclick="openModal()" style="display:none">
-        ⚠️ Add your Anthropic API key to get started.
+        ⚠️ Add your Claude API key to get started. Optionally add a Serper key for real trend data.
       </div>
 
       <!-- Platform toggles -->
@@ -775,13 +775,48 @@ function updateAnalyzeBtn() {
 
 // ─── LOADING STEPS ───────────────────────────────────────
 const STEPS = [
-  'Scanning Instagram trends…',
-  'Scanning TikTok for today\'s hits…',
-  'Parsing Facebook feed data…',
-  'Ranking by viral velocity…',
-  'Identifying content patterns…',
-  'Generating your strategy…'
+  'Searching Google for real trends…',
+  'Scanning Instagram & TikTok…',
+  'Analyzing viral patterns…',
+  'Ranking by engagement…',
+  'Building content strategy…',
+  'Generating your plan…'
 ];
+
+// ── Real-time search via Serper.dev ──
+async function searchTrends(niche, platforms) {
+  const serperKey = getSerperKey();
+  if (!serperKey) return null; // fallback to AI-only if no key
+
+  const queries = [
+    `${niche} viral ${platforms} trending today`,
+    `${niche} most viral content ${new Date().getFullYear()}`,
+    `trending ${niche} ${platforms} this week`
+  ];
+
+  try {
+    const results = await Promise.all(queries.map(q =>
+      fetch('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: { 'X-API-KEY': serperKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q, num: 5, gl: 'us', hl: 'en' })
+      }).then(r => r.json())
+    ));
+
+    // Extract organic results and news
+    const items = [];
+    results.forEach(r => {
+      (r.organic || []).forEach(i => items.push(`- ${i.title}: ${i.snippet} (${i.link})`));
+      (r.news || []).forEach(i => items.push(`- [NEWS] ${i.title}: ${i.snippet} (${i.link})`));
+    });
+
+    return items.slice(0, 20).join('
+');
+  } catch(e) {
+    console.warn('Serper search failed:', e);
+    return null;
+  }
+}
 function setLoadingStep(i) {
   document.getElementById('loading-steps').innerHTML = STEPS.map((s, idx) =>
     `<div class="loading-step ${idx < i ? 'done' : idx === i ? 'active' : ''}">
@@ -807,6 +842,19 @@ async function startAnalysis() {
 
   const platforms = [...activePlatforms].map(p => platformLabels[p]).join(', ');
   const today = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Search for real trends first
+  const realTrends = await searchTrends(selectedNiche, platforms);
+  const trendContext = realTrends
+    ? `
+
+Here is REAL data from Google searches about what's trending right now for this niche:
+${realTrends}
+
+Use this real data to ground your analysis. Reference actual trends, topics, and content styles found in these results.`
+    : '
+
+(No live search data available — use your best knowledge of current trends.)';
 
   const prompt = `You are ViralLab, an expert viral content analyst and strategist.
 
@@ -859,7 +907,9 @@ CRITICAL RULES:
 - Return ONLY a raw JSON array starting with [ and ending with ]
 - No markdown, no code fences, no backticks, no explanation text
 - Keep each field concise (1-2 sentences max for text fields)
-- Be creative and realistic. Vary platforms and formats across all 3 results.`;
+- Be creative and realistic. Vary platforms and formats across all 3 results.
+
+${trendContext}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -934,9 +984,10 @@ function renderResults(items) {
   items.forEach(i => { platformCount[i.platform] = (platformCount[i.platform]||0)+1; });
   const pSummary = Object.entries(platformCount).map(([p,c]) => `${c} from ${p}`).join(', ');
 
+  const dataSource = getSerperKey() ? '🟢 Grounded in real Google trends' : '🟡 AI-simulated trends';
   document.getElementById('results-title').innerHTML =
     `Top 3 Viral &mdash; <span style="color:var(--accent)">${selectedNiche}</span>`;
-  document.getElementById('results-meta').textContent = `Today's trending · ${pSummary}`;
+  document.getElementById('results-meta').innerHTML = `Today's trending · ${pSummary} · <span style="color:${getSerperKey() ? 'var(--green)' : 'var(--orange)'}">${dataSource}</span>`;
 
   const list = document.getElementById('content-list');
   list.innerHTML = '';
@@ -953,6 +1004,12 @@ function renderResults(items) {
           <div class="card-tags">
             <span class="tag tag-${platKey}">${item.platform}</span>
             <span class="tag tag-format">${item.format}</span>
+          </div>
+          <div class="card-search-links" style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+            <a href="https://www.tiktok.com/search?q=${encodeURIComponent(item.title)}" target="_blank" style="font-size:10px;color:#69c9d0;border:0.5px solid rgba(105,201,208,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 TikTok</a>
+            <a href="https://www.instagram.com/explore/tags/${encodeURIComponent(item.title.split(' ')[0])}" target="_blank" style="font-size:10px;color:#e1306c;border:0.5px solid rgba(225,48,108,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 Instagram</a>
+            <a href="https://www.google.com/search?q=${encodeURIComponent(item.title + ' ' + item.platform + ' viral')}" target="_blank" style="font-size:10px;color:#60a5fa;border:0.5px solid rgba(96,165,250,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🌐 Google</a>
+            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(item.title)}" target="_blank" style="font-size:10px;color:#fb923c;border:0.5px solid rgba(251,146,60,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">▶ YouTube</a>
           </div>
           <div class="card-stats">
             <div class="stat"><div class="dot" style="background:#a78bfa"></div><strong>${item.views}</strong> views</div>
