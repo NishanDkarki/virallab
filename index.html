@@ -6,11 +6,2075 @@
 <title>ViralLab — Viral Content Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
+  :root {<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViralLab — Viral Content Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
   :root {
     --bg: #09090b;
     --bg2: #111114;
     --bg3: #18181c;
     --card: #1c1c21;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f4f4f5;
+    --muted: #71717a;
+    --accent: #a78bfa;
+    --accent2: #7c3aed;
+    --pink: #f472b6;
+    --orange: #fb923c;
+    --green: #34d399;
+    --blue: #60a5fa;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 70% -10%, rgba(124,58,237,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at -10% 80%, rgba(244,114,182,0.12) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .badge {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+  .api-key-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    transition: all 0.15s;
+  }
+  .api-key-indicator:hover { border-color: var(--border2); color: var(--text); }
+  .api-key-indicator .dot { width:6px;height:6px;border-radius:50%;background:var(--red); }
+  .api-key-indicator .dot.connected { background:var(--green); }
+
+  /* API KEY MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 36px;
+    width: 100%;
+    max-width: 480px;
+    margin: 24px;
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .modal p { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 20px; }
+  .modal a { color: var(--accent); text-decoration: none; }
+  .modal a:hover { text-decoration: underline; }
+  .modal input {
+    width: 100%;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    transition: border 0.15s;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+  }
+  .modal input::placeholder { color: var(--muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0; }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-note {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .modal-note strong { color: var(--green); }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-ghost {
+    flex: 1;
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-save {
+    flex: 2;
+    background: var(--accent2);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-save:hover { background: #6d28d9; }
+
+  /* HERO */
+  .hero { text-align: center; margin-bottom: 52px; }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 60px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+  }
+
+  /* NO-KEY BANNER */
+  .no-key-banner {
+    background: rgba(251,146,60,0.08);
+    border: 0.5px solid rgba(251,146,60,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    font-size: 13px;
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .no-key-banner:hover { background: rgba(251,146,60,0.14); }
+
+  /* PLATFORM PILLS */
+  .platforms {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+  .platform-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+    color: var(--muted);
+    user-select: none;
+  }
+  .platform-pill.ig.active { border-color: #e1306c; color: #e1306c; background: rgba(225,48,108,0.08); }
+  .platform-pill.tt.active { border-color: #69c9d0; color: #69c9d0; background: rgba(105,201,208,0.08); }
+  .platform-pill.fb.active { border-color: #1877f2; color: #1877f2; background: rgba(24,119,242,0.08); }
+  .dot-ig { width:8px;height:8px;border-radius:50%;background:#e1306c; }
+  .dot-tt { width:8px;height:8px;border-radius:50%;background:#69c9d0; }
+  .dot-fb { width:8px;height:8px;border-radius:50%;background:#1877f2; }
+
+  /* NICHE GRID */
+  .niche-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    max-width: 680px;
+    margin: 0 auto 24px;
+  }
+  .niche-btn {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .niche-btn .icon { font-size: 22px; }
+  .niche-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .niche-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(167,139,250,0.08); }
+
+  .custom-input-row {
+    display: flex;
+    gap: 10px;
+    max-width: 420px;
+    margin: 0 auto 32px;
+  }
+  .custom-input-row input {
+    flex: 1;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s;
+  }
+  .custom-input-row input::placeholder { color: var(--muted); }
+  .custom-input-row input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent2);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .analyze-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 15px 48px;
+    font-size: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent2), #be185d);
+    border: none;
+  }
+  .analyze-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  /* LOADING */
+  .loading-screen { text-align: center; padding: 80px 24px; display: none; }
+  .loading-screen.show { display: block; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 300px;
+    margin: 24px auto 0;
+    text-align: left;
+  }
+  .loading-step { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .loading-step.done { color: var(--green); }
+  .loading-step.active { color: var(--text); }
+  .step-dot { width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0; }
+
+  /* RESULTS */
+  #results { display: none; }
+  #results.show { display: block; }
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .results-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.5px; }
+  .results-meta { font-size: 13px; color: var(--muted); }
+  .btn-reset {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { color: var(--text); border-color: var(--border); }
+
+  /* CONTENT CARDS */
+  .content-list { display: flex; flex-direction: column; gap: 16px; }
+  .content-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .content-card:hover { border-color: var(--border2); }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 22px;
+    cursor: pointer;
+  }
+  .rank-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent);
+    opacity: 0.4;
+    line-height: 1;
+    min-width: 40px;
+  }
+  .card-meta { flex: 1; }
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; margin-bottom: 6px; line-height: 1.35; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tag { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; border: 0.5px solid; }
+  .tag-ig { color: #e1306c; border-color: rgba(225,48,108,0.35); background: rgba(225,48,108,0.06); }
+  .tag-tt { color: #69c9d0; border-color: rgba(105,201,208,0.35); background: rgba(105,201,208,0.06); }
+  .tag-fb { color: #1877f2; border-color: rgba(24,119,242,0.35); background: rgba(24,119,242,0.06); }
+  .tag-format { color: var(--muted); border-color: var(--border); background: transparent; }
+  .card-stats { display: flex; gap: 16px; }
+  .stat { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .stat strong { color: var(--text); font-weight: 500; }
+  .stat .dot { width:5px;height:5px;border-radius:50%; }
+  .chevron { color: var(--muted); font-size: 18px; transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* EXPANDED PLAN */
+  .card-body { display: none; border-top: 0.5px solid var(--border); }
+  .card-body.show { display: block; }
+  .plan-loading {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .plan-spinner { width: 20px; height: 20px; border: 1.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .plan-section { padding: 22px 24px; border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+  .plan-section:nth-child(even) { border-right: none; }
+  .plan-section:nth-last-child(-n+2) { border-bottom: none; }
+  .plan-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+  .plan-section-content { font-size: 13px; line-height: 1.65; color: var(--text); }
+  .metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .metric-name { font-size: 12px; color: var(--muted); }
+  .metric-bar-wrap { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; margin: 0 10px; overflow: hidden; }
+  .metric-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--pink)); }
+  .metric-val { font-size: 12px; font-weight: 500; color: var(--accent); min-width: 28px; text-align: right; }
+
+  /* STORYBOARD */
+  .storyboard-section { border-top: 0.5px solid var(--border); padding: 22px 24px; }
+  .storyboard-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
+  .storyboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .storyboard-frame { background: var(--bg3); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .frame-visual { aspect-ratio: 9/16; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; font-size: 28px; position: relative; text-align: center; }
+  .frame-num { position: absolute; top: 8px; left: 10px; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); }
+  .frame-caption { font-size: 10px; line-height: 1.4; color: rgba(255,255,255,0.7); margin-top: 8px; }
+  .frame-desc { padding: 10px; font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 0.5px solid var(--border); }
+
+  /* ERROR */
+  .error-banner {
+    background: rgba(248,113,113,0.08);
+    border: 0.5px solid rgba(248,113,113,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 24px 0;
+    font-size: 13px;
+    color: var(--red);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .plan-grid { grid-template-columns: 1fr; }
+    .plan-section { border-right: none !important; }
+    .niche-grid { grid-template-columns: repeat(3, 1fr); }
+    .card-stats { flex-wrap: wrap; gap: 8px; }
+    .platforms { flex-wrap: wrap; }
+    .header-right { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>🔑 Enter your API key</h2>
+    <p>ViralLab uses the Anthropic Claude API to generate viral trend analysis and content strategies. Your key is stored only in your browser's localStorage and never sent anywhere except directly to Anthropic.</p>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+    <div class="modal-note">
+      <strong>🔒 Privacy:</strong> Your API key is stored in <code>localStorage</code> on your device only. It is sent directly to <code>api.anthropic.com</code> — this app has no backend.<br><br>
+      Don't have a key? Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveApiKey()">Save & Continue →</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      ViralLab
+    </div>
+    <div class="header-right">
+      <div class="badge">Free · Open Source</div>
+      <div class="api-key-indicator" id="key-indicator" onclick="openModal()">
+        <div class="dot" id="key-dot"></div>
+        <span id="key-label">Add API key</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SELECTOR SCREEN -->
+  <div id="selector-screen">
+    <div class="hero">
+      <h1>Find what's<br><span>going viral</span><br>right now</h1>
+      <p>Pick a niche. We'll surface the top 10 viral trends across Instagram, TikTok & Facebook — then generate your winning content plan.</p>
+
+      <div id="no-key-banner" class="no-key-banner" onclick="openModal()" style="display:none">
+        ⚠️ Add your free Anthropic API key to get started — it only takes 30 seconds.
+      </div>
+
+      <!-- Platform toggles -->
+      <div class="platforms">
+        <div class="platform-pill ig active" data-plat="ig" onclick="togglePlatform(this)">
+          <div class="dot-ig"></div> Instagram
+        </div>
+        <div class="platform-pill tt active" data-plat="tt" onclick="togglePlatform(this)">
+          <div class="dot-tt"></div> TikTok
+        </div>
+        <div class="platform-pill fb active" data-plat="fb" onclick="togglePlatform(this)">
+          <div class="dot-fb"></div> Facebook
+        </div>
+      </div>
+
+      <!-- Niche grid -->
+      <div class="niche-grid">
+        <div class="niche-btn" data-niche="Fitness & Health" onclick="selectNiche(this)"><span class="icon">💪</span>Fitness & Health</div>
+        <div class="niche-btn" data-niche="Food & Recipes" onclick="selectNiche(this)"><span class="icon">🍳</span>Food & Recipes</div>
+        <div class="niche-btn" data-niche="Personal Finance" onclick="selectNiche(this)"><span class="icon">💰</span>Personal Finance</div>
+        <div class="niche-btn" data-niche="Tech & AI" onclick="selectNiche(this)"><span class="icon">🤖</span>Tech & AI</div>
+        <div class="niche-btn" data-niche="Fashion & Style" onclick="selectNiche(this)"><span class="icon">👗</span>Fashion & Style</div>
+        <div class="niche-btn" data-niche="Travel" onclick="selectNiche(this)"><span class="icon">✈️</span>Travel</div>
+        <div class="niche-btn" data-niche="Parenting" onclick="selectNiche(this)"><span class="icon">👶</span>Parenting</div>
+        <div class="niche-btn" data-niche="Business & Entrepreneurship" onclick="selectNiche(this)"><span class="icon">🚀</span>Business</div>
+        <div class="niche-btn" data-niche="Beauty & Skincare" onclick="selectNiche(this)"><span class="icon">✨</span>Beauty</div>
+        <div class="niche-btn" data-niche="Gaming" onclick="selectNiche(this)"><span class="icon">🎮</span>Gaming</div>
+        <div class="niche-btn" data-niche="Mental Health & Wellness" onclick="selectNiche(this)"><span class="icon">🧘</span>Wellness</div>
+        <div class="niche-btn" data-niche="Pets" onclick="selectNiche(this)"><span class="icon">🐾</span>Pets</div>
+      </div>
+
+      <div class="custom-input-row">
+        <input type="text" id="custom-niche" placeholder="Or type your niche…" oninput="onCustomInput(this)" onkeydown="if(event.key==='Enter') useCustomNiche()">
+        <button class="btn-primary" onclick="useCustomNiche()">Use →</button>
+      </div>
+
+      <button class="btn-primary analyze-btn" id="analyze-btn" onclick="startAnalysis()" disabled>
+        🔍 Find Viral Content
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner"></div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px;">Scanning the feeds…</h2>
+    <p style="color:var(--muted);font-size:14px;">Analyzing viral patterns across platforms</p>
+    <div class="loading-steps" id="loading-steps"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="results-title">Top 10 Viral</div>
+        <div class="results-meta" id="results-meta"></div>
+      </div>
+      <button class="btn-reset" onclick="resetApp()">← New Search</button>
+    </div>
+    <div id="error-area"></div>
+    <div class="content-list" id="content-list"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let selectedNiche = '';
+let activePlatforms = new Set(['ig','tt','fb']);
+const platformLabels = { ig:'Instagram', tt:'TikTok', fb:'Facebook' };
+const platformColors  = { ig:'#e1306c',  tt:'#69c9d0', fb:'#1877f2' };
+
+// ─── API KEY MANAGEMENT ──────────────────────────────────
+function getApiKey() { return localStorage.getItem('virallab_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('virallab_api_key', k); }
+
+function updateKeyIndicator() {
+  const key = getApiKey();
+  const dot  = document.getElementById('key-dot');
+  const label = document.getElementById('key-label');
+  const banner = document.getElementById('no-key-banner');
+  if (key) {
+    dot.className = 'dot connected';
+    label.textContent = 'API key set ✓';
+    if (banner) banner.style.display = 'none';
+  } else {
+    dot.className = 'dot';
+    label.textContent = 'Add API key';
+    if (banner) banner.style.display = 'flex';
+  }
+  updateAnalyzeBtn();
+}
+
+function openModal() {
+  const overlay = document.getElementById('modal-overlay');
+  const input   = document.getElementById('api-key-input');
+  overlay.classList.add('show');
+  const existing = getApiKey();
+  input.value = existing ? existing : '';
+  setTimeout(() => input.focus(), 200);
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) { alert('Please enter your API key.'); return; }
+  if (!val.startsWith('sk-ant-')) {
+    if (!confirm('This doesn\'t look like an Anthropic API key (should start with sk-ant-). Save anyway?')) return;
+  }
+  setApiKey(val);
+  closeModal();
+  updateKeyIndicator();
+}
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─── PLATFORM / NICHE SELECTION ──────────────────────────
+function togglePlatform(el) {
+  const p = el.dataset.plat;
+  if (activePlatforms.has(p)) {
+    if (activePlatforms.size === 1) return;
+    activePlatforms.delete(p);
+    el.classList.remove('active');
+  } else {
+    activePlatforms.add(p);
+    el.classList.add('active');
+  }
+}
+function selectNiche(el) {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedNiche = el.dataset.niche;
+  document.getElementById('custom-niche').value = '';
+  updateAnalyzeBtn();
+}
+function onCustomInput(el) {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  selectedNiche = el.value.trim();
+  updateAnalyzeBtn();
+}
+function useCustomNiche() {
+  const val = document.getElementById('custom-niche').value.trim();
+  if (!val) return;
+  selectedNiche = val;
+  updateAnalyzeBtn();
+  if (selectedNiche && getApiKey()) startAnalysis();
+}
+function updateAnalyzeBtn() {
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = !selectedNiche || !getApiKey();
+  btn.title = !getApiKey() ? 'Add your API key first' : '';
+}
+
+// ─── LOADING STEPS ───────────────────────────────────────
+const STEPS = [
+  'Scanning Instagram trends…',
+  'Scanning TikTok for today\'s hits…',
+  'Parsing Facebook feed data…',
+  'Ranking by viral velocity…',
+  'Identifying content patterns…',
+  'Generating your strategy…'
+];
+function setLoadingStep(i) {
+  document.getElementById('loading-steps').innerHTML = STEPS.map((s, idx) =>
+    `<div class="loading-step ${idx < i ? 'done' : idx === i ? 'active' : ''}">
+      <div class="step-dot"></div>${idx < i ? '✓ ' : ''}${s}
+    </div>`
+  ).join('');
+}
+
+// ─── MAIN ANALYSIS ───────────────────────────────────────
+async function startAnalysis() {
+  if (!selectedNiche) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { openModal(); return; }
+
+  document.getElementById('selector-screen').style.display = 'none';
+  document.getElementById('loading-screen').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('error-area').innerHTML = '';
+
+  let step = 0;
+  setLoadingStep(step);
+  const interval = setInterval(() => { step = Math.min(step+1, STEPS.length-1); setLoadingStep(step); }, 900);
+
+  const platforms = [...activePlatforms].map(p => platformLabels[p]).join(', ');
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const prompt = `You are ViralLab, an expert viral content analyst and strategist.
+
+Today is ${today}. The user's niche is: "${selectedNiche}"
+Active platforms: ${platforms}
+
+Your task: Identify the TOP 10 most viral content pieces trending RIGHT NOW in this niche across ${platforms}.
+
+For each of the 10 viral contents, respond with a JSON object (return a JSON array of 10 objects, no markdown, no preamble, just raw JSON):
+
+[
+  {
+    "rank": 1,
+    "title": "Catchy descriptive title of the viral content (be specific, creative, realistic)",
+    "platform": "Instagram",
+    "format": "Reel",
+    "views": "4.2M",
+    "engagement": "18.3%",
+    "shares": "127K",
+    "hook": "The opening hook or concept that made it go viral (2-3 sentences)",
+    "whyViral": "Key reason it went viral (2-3 sentences)",
+    "emoji": "One relevant emoji",
+    "plan": {
+      "concept": "Your new content concept to ride this viral wave (3-4 sentences, specific)",
+      "hook": "The exact first 3 seconds / opening line to hook the viewer",
+      "structure": "Step-by-step content structure (numbered, 5-7 steps)",
+      "cta": "The call-to-action and engagement trigger",
+      "bestTime": "Best time to post (day + time)",
+      "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5"
+    },
+    "metrics": {
+      "viralPotential": 87,
+      "engagementLikelihood": 79,
+      "shareability": 92,
+      "trendRelevance": 95,
+      "productionEase": 68
+    },
+    "storyboard": [
+      { "frame": 1, "seconds": "0-3s",  "visual": "Description of what's on screen", "audio": "What's said or heard", "emoji": "🔥" },
+      { "frame": 2, "seconds": "3-8s",  "visual": "...", "audio": "...", "emoji": "💡" },
+      { "frame": 3, "seconds": "8-15s", "visual": "...", "audio": "...", "emoji": "⚡" },
+      { "frame": 4, "seconds": "15-25s","visual": "...", "audio": "...", "emoji": "🎯" },
+      { "frame": 5, "seconds": "25-35s","visual": "...", "audio": "...", "emoji": "✨" },
+      { "frame": 6, "seconds": "35-45s","visual": "...", "audio": "...", "emoji": "🚀" }
+    ]
+  }
+]
+
+Be creative, specific, and realistic. Vary platforms and formats across the 10 results. Return ONLY the JSON array, nothing else.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    clearInterval(interval);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    let raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    raw = raw.replace(/```json|```/g, '').trim();
+    const s = raw.indexOf('['), e = raw.lastIndexOf(']');
+    if (s === -1 || e === -1) throw new Error('Could not parse response. Please try again.');
+    const items = JSON.parse(raw.slice(s, e+1));
+
+    document.getElementById('loading-screen').classList.remove('show');
+    renderResults(items);
+
+  } catch(err) {
+    clearInterval(interval);
+    document.getElementById('loading-screen').classList.remove('show');
+    document.getElementById('selector-screen').style.display = 'block';
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-banner">❌ ${err.message}${err.message.includes('401') ? ' — Check your API key.' : ''}</div>`;
+    document.getElementById('results').classList.add('show');
+    document.getElementById('content-list').innerHTML = '';
+    console.error(err);
+  }
+}
+
+// ─── RENDER RESULTS ──────────────────────────────────────
+function renderResults(items) {
+  const platformCount = {};
+  items.forEach(i => { platformCount[i.platform] = (platformCount[i.platform]||0)+1; });
+  const pSummary = Object.entries(platformCount).map(([p,c]) => `${c} from ${p}`).join(', ');
+
+  document.getElementById('results-title').innerHTML =
+    `Top 10 Viral &mdash; <span style="color:var(--accent)">${selectedNiche}</span>`;
+  document.getElementById('results-meta').textContent = `Today's trending · ${pSummary}`;
+
+  const list = document.getElementById('content-list');
+  list.innerHTML = '';
+
+  items.forEach((item, idx) => {
+    const platKey = item.platform === 'Instagram' ? 'ig' : item.platform === 'TikTok' ? 'tt' : 'fb';
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(this, ${idx})">
+        <div class="rank-badge">${String(item.rank).padStart(2,'0')}</div>
+        <div class="card-meta">
+          <div class="card-title">${escHtml(item.title)}</div>
+          <div class="card-tags">
+            <span class="tag tag-${platKey}">${item.platform}</span>
+            <span class="tag tag-format">${item.format}</span>
+          </div>
+          <div class="card-stats">
+            <div class="stat"><div class="dot" style="background:#a78bfa"></div><strong>${item.views}</strong> views</div>
+            <div class="stat"><div class="dot" style="background:#f472b6"></div><strong>${item.engagement}</strong> eng.</div>
+            <div class="stat"><div class="dot" style="background:#34d399"></div><strong>${item.shares}</strong> shares</div>
+          </div>
+        </div>
+        <div class="chevron" id="chevron-${idx}">⌄</div>
+      </div>
+      <div class="card-body" id="body-${idx}">
+        <div class="plan-loading" id="plan-loading-${idx}">
+          <div class="plan-spinner"></div> Generating your content plan…
+        </div>
+        <div id="plan-content-${idx}" style="display:none"></div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  document.getElementById('results').classList.add('show');
+  window._viralData = items;
+}
+
+// ─── TOGGLE CARD ─────────────────────────────────────────
+const expandedCards = new Set();
+const loadedCards   = new Set();
+
+async function toggleCard(headerEl, idx) {
+  const body    = document.getElementById(`body-${idx}`);
+  const chevron = document.getElementById(`chevron-${idx}`);
+  if (expandedCards.has(idx)) {
+    expandedCards.delete(idx);
+    body.classList.remove('show');
+    chevron.classList.remove('open');
+    return;
+  }
+  expandedCards.add(idx);
+  body.classList.add('show');
+  chevron.classList.add('open');
+  if (loadedCards.has(idx)) return;
+  loadedCards.add(idx);
+
+  const item     = window._viralData[idx];
+  const planEl   = document.getElementById(`plan-content-${idx}`);
+  const loadingEl = document.getElementById(`plan-loading-${idx}`);
+  const apiKey   = getApiKey();
+
+  const prompt2 = `You are ViralLab. Expand this viral content strategy with rich, specific detail.
+
+Viral Post: "${item.title}" on ${item.platform}
+Why Viral: ${item.whyViral}
+Plan Concept: ${item.plan.concept}
+
+Return ONLY a JSON object (no markdown, no preamble):
+{
+  "concept": "${item.plan.concept}",
+  "hook": "${item.plan.hook}",
+  "structure": "${item.plan.structure}",
+  "cta": "${item.plan.cta}",
+  "bestTime": "${item.plan.bestTime}",
+  "hashtags": "${item.plan.hashtags}",
+  "tipsToBoostViral": "3-4 specific actionable tips to boost virality for this exact content piece",
+  "avoidMistakes": "2-3 common mistakes creators make with this type of content and how to avoid them",
+  "metrics": ${JSON.stringify(item.metrics)},
+  "storyboard": ${JSON.stringify(item.storyboard)}
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        messages: [{ role:'user', content: prompt2 }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    let raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    raw = raw.replace(/```json|```/g,'').trim();
+    const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+    const plan = JSON.parse(raw.slice(s, e+1));
+
+    loadingEl.style.display = 'none';
+    planEl.style.display = 'block';
+
+    const metricLabels = { viralPotential:'Viral Potential', engagementLikelihood:'Engagement', shareability:'Shareability', trendRelevance:'Trend Relevance', productionEase:'Production Ease' };
+    const metricsHTML = Object.entries(plan.metrics || item.metrics).map(([k,v]) =>
+      `<div class="metric-row">
+        <span class="metric-name">${metricLabels[k]||k}</span>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:${v}%"></div></div>
+        <span class="metric-val">${v}%</span>
+      </div>`).join('');
+
+    const bgMap = ['rgba(124,58,237,0.15)','rgba(244,114,182,0.12)','rgba(52,211,153,0.12)','rgba(251,146,60,0.12)','rgba(96,165,250,0.12)','rgba(248,113,113,0.12)'];
+
+    const storyboardHTML = (plan.storyboard || item.storyboard).map((f, fi) =>
+      `<div class="storyboard-frame">
+        <div class="frame-visual" style="background:${bgMap[fi % bgMap.length]}">
+          <span class="frame-num">Frame ${f.frame} · ${f.seconds}</span>
+          <span style="font-size:32px">${f.emoji || '🎬'}</span>
+        </div>
+        <div class="frame-desc">
+          <div style="font-weight:500;color:var(--text);margin-bottom:3px;font-size:11px">${escHtml(f.visual)}</div>
+          <div style="color:var(--muted);font-size:10px;font-style:italic">${escHtml(f.audio)}</div>
+        </div>
+      </div>`).join('');
+
+    planEl.innerHTML = `
+      <div class="plan-grid">
+        <div class="plan-section">
+          <div class="plan-section-label">📝 Content Concept</div>
+          <div class="plan-section-content">${escHtml(plan.concept)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">⚡ Opening Hook</div>
+          <div class="plan-section-content" style="font-style:italic;color:var(--accent)">"${escHtml(plan.hook)}"</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">📊 Viral Metrics</div>
+          <div class="plan-section-content">${metricsHTML}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">🚀 Boost Virality</div>
+          <div class="plan-section-content">${escHtml(plan.tipsToBoostViral)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">📋 Content Structure</div>
+          <div class="plan-section-content">${escHtml(plan.structure)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">⚠️ Avoid These Mistakes</div>
+          <div class="plan-section-content">${escHtml(plan.avoidMistakes)}</div>
+        </div>
+      </div>
+      <div class="plan-grid" style="border-top:0.5px solid var(--border)">
+        <div class="plan-section">
+          <div class="plan-section-label">📣 Call to Action</div>
+          <div class="plan-section-content">${escHtml(plan.cta)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">🕐 Best Time to Post</div>
+          <div class="plan-section-content" style="font-weight:500">${escHtml(plan.bestTime)}</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.8">${escHtml(plan.hashtags)}</div>
+        </div>
+      </div>
+      <div class="storyboard-section">
+        <div class="storyboard-label">🎬 Visual Storyboard</div>
+        <div class="storyboard-grid">${storyboardHTML}</div>
+      </div>`;
+
+  } catch(err) {
+    loadingEl.innerHTML = `<span style="color:var(--red)">Failed to load. Click the card again to retry. (${err.message})</span>`;
+    loadedCards.delete(idx);
+    console.error(err);
+  }
+}
+
+// ─── RESET ───────────────────────────────────────────────
+function resetApp() {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('selector-screen').style.display = 'block';
+  document.getElementById('content-list').innerHTML = '';
+  document.getElementById('error-area').innerHTML = '';
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('custom-niche').value = '';
+  selectedNiche = '';
+  expandedCards.clear();
+  loadedCards.clear();
+  window._viralData = null;
+  updateAnalyzeBtn();
+}
+
+// ─── UTILS ───────────────────────────────────────────────
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────
+updateKeyIndicator();
+if (!getApiKey()) openModal();
+</script>
+</body>
+</html>
+
+    --bg: #09090b;
+    --bg2: #111114;
+    --bg3: #18181c;
+    --card: #1c1c21;<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViralLab — Viral Content Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090b;
+    --bg2: #111114;
+    --bg3: #18181c;
+    --card: #1c1c21;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f4f4f5;
+    --muted: #71717a;
+    --accent: #a78bfa;
+    --accent2: #7c3aed;
+    --pink: #f472b6;
+    --orange: #fb923c;
+    --green: #34d399;
+    --blue: #60a5fa;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 70% -10%, rgba(124,58,237,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at -10% 80%, rgba(244,114,182,0.12) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .badge {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+  .api-key-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    transition: all 0.15s;
+  }
+  .api-key-indicator:hover { border-color: var(--border2); color: var(--text); }
+  .api-key-indicator .dot { width:6px;height:6px;border-radius:50%;background:var(--red); }
+  .api-key-indicator .dot.connected { background:var(--green); }
+
+  /* API KEY MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 36px;
+    width: 100%;
+    max-width: 480px;
+    margin: 24px;
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .modal p { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 20px; }
+  .modal a { color: var(--accent); text-decoration: none; }
+  .modal a:hover { text-decoration: underline; }
+  .modal input {
+    width: 100%;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    transition: border 0.15s;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+  }
+  .modal input::placeholder { color: var(--muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0; }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-note {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .modal-note strong { color: var(--green); }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-ghost {
+    flex: 1;
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-save {
+    flex: 2;
+    background: var(--accent2);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-save:hover { background: #6d28d9; }
+
+  /* HERO */
+  .hero { text-align: center; margin-bottom: 52px; }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 60px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+  }
+
+  /* NO-KEY BANNER */
+  .no-key-banner {
+    background: rgba(251,146,60,0.08);
+    border: 0.5px solid rgba(251,146,60,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    font-size: 13px;
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .no-key-banner:hover { background: rgba(251,146,60,0.14); }
+
+  /* PLATFORM PILLS */
+  .platforms {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+  .platform-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+    color: var(--muted);
+    user-select: none;
+  }
+  .platform-pill.ig.active { border-color: #e1306c; color: #e1306c; background: rgba(225,48,108,0.08); }
+  .platform-pill.tt.active { border-color: #69c9d0; color: #69c9d0; background: rgba(105,201,208,0.08); }
+  .platform-pill.fb.active { border-color: #1877f2; color: #1877f2; background: rgba(24,119,242,0.08); }
+  .dot-ig { width:8px;height:8px;border-radius:50%;background:#e1306c; }
+  .dot-tt { width:8px;height:8px;border-radius:50%;background:#69c9d0; }
+  .dot-fb { width:8px;height:8px;border-radius:50%;background:#1877f2; }
+
+  /* NICHE GRID */
+  .niche-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    max-width: 680px;
+    margin: 0 auto 24px;
+  }
+  .niche-btn {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .niche-btn .icon { font-size: 22px; }
+  .niche-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .niche-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(167,139,250,0.08); }
+
+  .custom-input-row {
+    display: flex;
+    gap: 10px;
+    max-width: 420px;
+    margin: 0 auto 32px;
+  }
+  .custom-input-row input {
+    flex: 1;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s;
+  }
+  .custom-input-row input::placeholder { color: var(--muted); }
+  .custom-input-row input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent2);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .analyze-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 15px 48px;
+    font-size: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent2), #be185d);
+    border: none;
+  }
+  .analyze-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  /* LOADING */
+  .loading-screen { text-align: center; padding: 80px 24px; display: none; }
+  .loading-screen.show { display: block; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 300px;
+    margin: 24px auto 0;
+    text-align: left;
+  }
+  .loading-step { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .loading-step.done { color: var(--green); }
+  .loading-step.active { color: var(--text); }
+  .step-dot { width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0; }
+
+  /* RESULTS */
+  #results { display: none; }
+  #results.show { display: block; }
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .results-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.5px; }
+  .results-meta { font-size: 13px; color: var(--muted); }
+  .btn-reset {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { color: var(--text); border-color: var(--border); }
+
+  /* CONTENT CARDS */
+  .content-list { display: flex; flex-direction: column; gap: 16px; }
+  .content-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .content-card:hover { border-color: var(--border2); }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 22px;
+    cursor: pointer;
+  }
+  .rank-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent);
+    opacity: 0.4;
+    line-height: 1;
+    min-width: 40px;
+  }
+  .card-meta { flex: 1; }
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; margin-bottom: 6px; line-height: 1.35; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tag { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; border: 0.5px solid; }
+  .tag-ig { color: #e1306c; border-color: rgba(225,48,108,0.35); background: rgba(225,48,108,0.06); }
+  .tag-tt { color: #69c9d0; border-color: rgba(105,201,208,0.35); background: rgba(105,201,208,0.06); }
+  .tag-fb { color: #1877f2; border-color: rgba(24,119,242,0.35); background: rgba(24,119,242,0.06); }
+  .tag-format { color: var(--muted); border-color: var(--border); background: transparent; }
+  .card-stats { display: flex; gap: 16px; }
+  .stat { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .stat strong { color: var(--text); font-weight: 500; }
+  .stat .dot { width:5px;height:5px;border-radius:50%; }
+  .chevron { color: var(--muted); font-size: 18px; transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* EXPANDED PLAN */
+  .card-body { display: none; border-top: 0.5px solid var(--border); }
+  .card-body.show { display: block; }
+  .plan-loading {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .plan-spinner { width: 20px; height: 20px; border: 1.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .plan-section { padding: 22px 24px; border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+  .plan-section:nth-child(even) { border-right: none; }
+  .plan-section:nth-last-child(-n+2) { border-bottom: none; }
+  .plan-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+  .plan-section-content { font-size: 13px; line-height: 1.65; color: var(--text); }
+  .metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .metric-name { font-size: 12px; color: var(--muted); }
+  .metric-bar-wrap { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; margin: 0 10px; overflow: hidden; }
+  .metric-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--pink)); }
+  .metric-val { font-size: 12px; font-weight: 500; color: var(--accent); min-width: 28px; text-align: right; }
+
+  /* STORYBOARD */
+  .storyboard-section { border-top: 0.5px solid var(--border); padding: 22px 24px; }
+  .storyboard-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
+  .storyboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .storyboard-frame { background: var(--bg3); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .frame-visual { aspect-ratio: 9/16; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; font-size: 28px; position: relative; text-align: center; }
+  .frame-num { position: absolute; top: 8px; left: 10px; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); }
+  .frame-caption { font-size: 10px; line-height: 1.4; color: rgba(255,255,255,0.7); margin-top: 8px; }
+  .frame-desc { padding: 10px; font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 0.5px solid var(--border); }
+
+  /* ERROR */
+  .error-banner {
+    background: rgba(248,113,113,0.08);
+    border: 0.5px solid rgba(248,113,113,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 24px 0;
+    font-size: 13px;
+    color: var(--red);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .plan-grid { grid-template-columns: 1fr; }
+    .plan-section { border-right: none !important; }
+    .niche-grid { grid-template-columns: repeat(3, 1fr); }
+    .card-stats { flex-wrap: wrap; gap: 8px; }
+    .platforms { flex-wrap: wrap; }
+    .header-right { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>🔑 Enter your API key</h2>
+    <p>ViralLab uses the Anthropic Claude API to generate viral trend analysis and content strategies. Your key is stored only in your browser's localStorage and never sent anywhere except directly to Anthropic.</p>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+    <div class="modal-note">
+      <strong>🔒 Privacy:</strong> Your API key is stored in <code>localStorage</code> on your device only. It is sent directly to <code>api.anthropic.com</code> — this app has no backend.<br><br>
+      Don't have a key? Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveApiKey()">Save & Continue →</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      ViralLab
+    </div>
+    <div class="header-right">
+      <div class="badge">Free · Open Source</div>
+      <div class="api-key-indicator" id="key-indicator" onclick="openModal()">
+        <div class="dot" id="key-dot"></div>
+        <span id="key-label">Add API key</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SELECTOR SCREEN -->
+  <div id="selector-screen">
+    <div class="hero">
+      <h1>Find what's<br><span>going viral</span><br>right now</h1>
+      <p>Pick a niche. We'll surface the top 10 viral trends across Instagram, TikTok & Facebook — then generate your winning content plan.</p>
+
+      <div id="no-key-banner" class="no-key-banner" onclick="openModal()" style="display:none">
+        ⚠️ Add your free Anthropic API key to get started — it only takes 30 seconds.
+      </div>
+
+      <!-- Platform toggles -->
+      <div class="platforms">
+        <div class="platform-pill ig active" data-plat="ig" onclick="togglePlatform(this)">
+          <div class="dot-ig"></div> Instagram
+        </div>
+        <div class="platform-pill tt active" data-plat="tt" onclick="togglePlatform(this)">
+          <div class="dot-tt"></div> TikTok
+        </div>
+        <div class="platform-pill fb active" data-plat="fb" onclick="togglePlatform(this)">
+          <div class="dot-fb"></div> Facebook
+        </div>
+      </div>
+
+      <!-- Niche grid -->
+      <div class="niche-grid">
+        <div class="niche-btn" data-niche="Fitness & Health" onclick="selectNiche(this)"><span class="icon">💪</span>Fitness & Health</div>
+        <div class="niche-btn" data-niche="Food & Recipes" onclick="selectNiche(this)"><span class="icon">🍳</span>Food & Recipes</div>
+        <div class="niche-btn" data-niche="Personal Finance" onclick="selectNiche(this)"><span class="icon">💰</span>Personal Finance</div>
+        <div class="niche-btn" data-niche="Tech & AI" onclick="selectNiche(this)"><span class="icon">🤖</span>Tech & AI</div>
+        <div class="niche-btn" data-niche="Fashion & Style" onclick="selectNiche(this)"><span class="icon">👗</span>Fashion & Style</div>
+        <div class="niche-btn" data-niche="Travel" onclick="selectNiche(this)"><span class="icon">✈️</span>Travel</div>
+        <div class="niche-btn" data-niche="Parenting" onclick="selectNiche(this)"><span class="icon">👶</span>Parenting</div>
+        <div class="niche-btn" data-niche="Business & Entrepreneurship" onclick="selectNiche(this)"><span class="icon">🚀</span>Business</div>
+        <div class="niche-btn" data-niche="Beauty & Skincare" onclick="selectNiche(this)"><span class="icon">✨</span>Beauty</div>
+        <div class="niche-btn" data-niche="Gaming" onclick="selectNiche(this)"><span class="icon">🎮</span>Gaming</div>
+        <div class="niche-btn" data-niche="Mental Health & Wellness" onclick="selectNiche(this)"><span class="icon">🧘</span>Wellness</div>
+        <div class="niche-btn" data-niche="Pets" onclick="selectNiche(this)"><span class="icon">🐾</span>Pets</div>
+      </div>
+
+      <div class="custom-input-row">
+        <input type="text" id="custom-niche" placeholder="Or type your niche…" oninput="onCustomInput(this)" onkeydown="if(event.key==='Enter') useCustomNiche()">
+        <button class="btn-primary" onclick="useCustomNiche()">Use →</button>
+      </div>
+
+      <button class="btn-primary analyze-btn" id="analyze-btn" onclick="startAnalysis()" disabled>
+        🔍 Find Viral Content
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner"></div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px;">Scanning the feeds…</h2>
+    <p style="color:var(--muted);font-size:14px;">Analyzing viral patterns across platforms</p>
+    <div class="loading-steps" id="loading-steps"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="results-title">Top 10 Viral</div>
+        <div class="results-meta" id="results-meta"></div>
+      </div>
+      <button class="btn-reset" onclick="resetApp()">← New Search</button>
+    </div>
+    <div id="error-area"></div>
+    <div class="content-list" id="content-list"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let selectedNiche = '';
+let activePlatforms = new Set(['ig','tt','fb']);
+const platformLabels = { ig:'Instagram', tt:'TikTok', fb:'Facebook' };
+const platformColors  = { ig:'#e1306c',  tt:'#69c9d0', fb:'#1877f2' };
+
+// ─── API KEY MANAGEMENT ──────────────────────────────────
+function getApiKey() { return localStorage.getItem('virallab_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('virallab_api_key', k); }
+
+function updateKeyIndicator() {
+  const key = getApiKey();
+  const dot  = document.getElementById('key-dot');
+  const label = document.getElementById('key-label');
+  const banner = document.getElementById('no-key-banner');
+  if (key) {
+    dot.className = 'dot connected';
+    label.textContent = 'API key set ✓';
+    if (banner) banner.style.display = 'none';
+  } else {
+    dot.className = 'dot';
+    label.textContent = 'Add API key';
+    if (banner) banner.style.display = 'flex';
+  }
+  updateAnalyzeBtn();
+}
+
+function openModal() {
+  const overlay = document.getElementById('modal-overlay');
+  const input   = document.getElementById('api-key-input');
+  overlay.classList.add('show');
+  const existing = getApiKey();
+  input.value = existing ? existing : '';
+  setTimeout(() => input.focus(), 200);
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) { alert('Please enter your API key.'); return; }
+  if (!val.startsWith('sk-ant-')) {
+    if (!confirm('This doesn\'t look like an Anthropic API key (should start with sk-ant-). Save anyway?')) return;
+  }
+  setApiKey(val);
+  closeModal();
+  updateKeyIndicator();
+}
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─── PLATFORM / NICHE SELECTION ──────────────────────────
+function togglePlatform(el) {
+  const p = el.dataset.plat;
+  if (activePlatforms.has(p)) {
+    if (activePlatforms.size === 1) return;
+    activePlatforms.delete(p);
+    el.classList.remove('active');
+  } else {
+    activePlatforms.add(p);
+    el.classList.add('active');
+  }
+}
+function selectNiche(el) {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedNiche = el.dataset.niche;
+  document.getElementById('custom-niche').value = '';
+  updateAnalyzeBtn();
+}
+function onCustomInput(el) {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  selectedNiche = el.value.trim();
+  updateAnalyzeBtn();
+}
+function useCustomNiche() {
+  const val = document.getElementById('custom-niche').value.trim();
+  if (!val) return;
+  selectedNiche = val;
+  updateAnalyzeBtn();
+  if (selectedNiche && getApiKey()) startAnalysis();
+}
+function updateAnalyzeBtn() {
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = !selectedNiche || !getApiKey();
+  btn.title = !getApiKey() ? 'Add your API key first' : '';
+}
+
+// ─── LOADING STEPS ───────────────────────────────────────
+const STEPS = [
+  'Scanning Instagram trends…',
+  'Scanning TikTok for today\'s hits…',
+  'Parsing Facebook feed data…',
+  'Ranking by viral velocity…',
+  'Identifying content patterns…',
+  'Generating your strategy…'
+];
+function setLoadingStep(i) {
+  document.getElementById('loading-steps').innerHTML = STEPS.map((s, idx) =>
+    `<div class="loading-step ${idx < i ? 'done' : idx === i ? 'active' : ''}">
+      <div class="step-dot"></div>${idx < i ? '✓ ' : ''}${s}
+    </div>`
+  ).join('');
+}
+
+// ─── MAIN ANALYSIS ───────────────────────────────────────
+async function startAnalysis() {
+  if (!selectedNiche) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { openModal(); return; }
+
+  document.getElementById('selector-screen').style.display = 'none';
+  document.getElementById('loading-screen').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('error-area').innerHTML = '';
+
+  let step = 0;
+  setLoadingStep(step);
+  const interval = setInterval(() => { step = Math.min(step+1, STEPS.length-1); setLoadingStep(step); }, 900);
+
+  const platforms = [...activePlatforms].map(p => platformLabels[p]).join(', ');
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const prompt = `You are ViralLab, an expert viral content analyst and strategist.
+
+Today is ${today}. The user's niche is: "${selectedNiche}"
+Active platforms: ${platforms}
+
+Your task: Identify the TOP 10 most viral content pieces trending RIGHT NOW in this niche across ${platforms}.
+
+For each of the 10 viral contents, respond with a JSON object (return a JSON array of 10 objects, no markdown, no preamble, just raw JSON):
+
+[
+  {
+    "rank": 1,
+    "title": "Catchy descriptive title of the viral content (be specific, creative, realistic)",
+    "platform": "Instagram",
+    "format": "Reel",
+    "views": "4.2M",
+    "engagement": "18.3%",
+    "shares": "127K",
+    "hook": "The opening hook or concept that made it go viral (2-3 sentences)",
+    "whyViral": "Key reason it went viral (2-3 sentences)",
+    "emoji": "One relevant emoji",
+    "plan": {
+      "concept": "Your new content concept to ride this viral wave (3-4 sentences, specific)",
+      "hook": "The exact first 3 seconds / opening line to hook the viewer",
+      "structure": "Step-by-step content structure (numbered, 5-7 steps)",
+      "cta": "The call-to-action and engagement trigger",
+      "bestTime": "Best time to post (day + time)",
+      "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5"
+    },
+    "metrics": {
+      "viralPotential": 87,
+      "engagementLikelihood": 79,
+      "shareability": 92,
+      "trendRelevance": 95,
+      "productionEase": 68
+    },
+    "storyboard": [
+      { "frame": 1, "seconds": "0-3s",  "visual": "Description of what's on screen", "audio": "What's said or heard", "emoji": "🔥" },
+      { "frame": 2, "seconds": "3-8s",  "visual": "...", "audio": "...", "emoji": "💡" },
+      { "frame": 3, "seconds": "8-15s", "visual": "...", "audio": "...", "emoji": "⚡" },
+      { "frame": 4, "seconds": "15-25s","visual": "...", "audio": "...", "emoji": "🎯" },
+      { "frame": 5, "seconds": "25-35s","visual": "...", "audio": "...", "emoji": "✨" },
+      { "frame": 6, "seconds": "35-45s","visual": "...", "audio": "...", "emoji": "🚀" }
+    ]
+  }
+]
+
+Be creative, specific, and realistic. Vary platforms and formats across the 10 results. Return ONLY the JSON array, nothing else.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    clearInterval(interval);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    let raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    raw = raw.replace(/```json|```/g, '').trim();
+    const s = raw.indexOf('['), e = raw.lastIndexOf(']');
+    if (s === -1 || e === -1) throw new Error('Could not parse response. Please try again.');
+    const items = JSON.parse(raw.slice(s, e+1));
+
+    document.getElementById('loading-screen').classList.remove('show');
+    renderResults(items);
+
+  } catch(err) {
+    clearInterval(interval);
+    document.getElementById('loading-screen').classList.remove('show');
+    document.getElementById('selector-screen').style.display = 'block';
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-banner">❌ ${err.message}${err.message.includes('401') ? ' — Check your API key.' : ''}</div>`;
+    document.getElementById('results').classList.add('show');
+    document.getElementById('content-list').innerHTML = '';
+    console.error(err);
+  }
+}
+
+// ─── RENDER RESULTS ──────────────────────────────────────
+function renderResults(items) {
+  const platformCount = {};
+  items.forEach(i => { platformCount[i.platform] = (platformCount[i.platform]||0)+1; });
+  const pSummary = Object.entries(platformCount).map(([p,c]) => `${c} from ${p}`).join(', ');
+
+  document.getElementById('results-title').innerHTML =
+    `Top 10 Viral &mdash; <span style="color:var(--accent)">${selectedNiche}</span>`;
+  document.getElementById('results-meta').textContent = `Today's trending · ${pSummary}`;
+
+  const list = document.getElementById('content-list');
+  list.innerHTML = '';
+
+  items.forEach((item, idx) => {
+    const platKey = item.platform === 'Instagram' ? 'ig' : item.platform === 'TikTok' ? 'tt' : 'fb';
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(this, ${idx})">
+        <div class="rank-badge">${String(item.rank).padStart(2,'0')}</div>
+        <div class="card-meta">
+          <div class="card-title">${escHtml(item.title)}</div>
+          <div class="card-tags">
+            <span class="tag tag-${platKey}">${item.platform}</span>
+            <span class="tag tag-format">${item.format}</span>
+          </div>
+          <div class="card-stats">
+            <div class="stat"><div class="dot" style="background:#a78bfa"></div><strong>${item.views}</strong> views</div>
+            <div class="stat"><div class="dot" style="background:#f472b6"></div><strong>${item.engagement}</strong> eng.</div>
+            <div class="stat"><div class="dot" style="background:#34d399"></div><strong>${item.shares}</strong> shares</div>
+          </div>
+        </div>
+        <div class="chevron" id="chevron-${idx}">⌄</div>
+      </div>
+      <div class="card-body" id="body-${idx}">
+        <div class="plan-loading" id="plan-loading-${idx}">
+          <div class="plan-spinner"></div> Generating your content plan…
+        </div>
+        <div id="plan-content-${idx}" style="display:none"></div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  document.getElementById('results').classList.add('show');
+  window._viralData = items;
+}
+
+// ─── TOGGLE CARD ─────────────────────────────────────────
+const expandedCards = new Set();
+const loadedCards   = new Set();
+
+async function toggleCard(headerEl, idx) {
+  const body    = document.getElementById(`body-${idx}`);
+  const chevron = document.getElementById(`chevron-${idx}`);
+  if (expandedCards.has(idx)) {
+    expandedCards.delete(idx);
+    body.classList.remove('show');
+    chevron.classList.remove('open');
+    return;
+  }
+  expandedCards.add(idx);
+  body.classList.add('show');
+  chevron.classList.add('open');
+  if (loadedCards.has(idx)) return;
+  loadedCards.add(idx);
+
+  const item     = window._viralData[idx];
+  const planEl   = document.getElementById(`plan-content-${idx}`);
+  const loadingEl = document.getElementById(`plan-loading-${idx}`);
+  const apiKey   = getApiKey();
+
+  const prompt2 = `You are ViralLab. Expand this viral content strategy with rich, specific detail.
+
+Viral Post: "${item.title}" on ${item.platform}
+Why Viral: ${item.whyViral}
+Plan Concept: ${item.plan.concept}
+
+Return ONLY a JSON object (no markdown, no preamble):
+{
+  "concept": "${item.plan.concept}",
+  "hook": "${item.plan.hook}",
+  "structure": "${item.plan.structure}",
+  "cta": "${item.plan.cta}",
+  "bestTime": "${item.plan.bestTime}",
+  "hashtags": "${item.plan.hashtags}",
+  "tipsToBoostViral": "3-4 specific actionable tips to boost virality for this exact content piece",
+  "avoidMistakes": "2-3 common mistakes creators make with this type of content and how to avoid them",
+  "metrics": ${JSON.stringify(item.metrics)},
+  "storyboard": ${JSON.stringify(item.storyboard)}
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        messages: [{ role:'user', content: prompt2 }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    let raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    raw = raw.replace(/```json|```/g,'').trim();
+    const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+    const plan = JSON.parse(raw.slice(s, e+1));
+
+    loadingEl.style.display = 'none';
+    planEl.style.display = 'block';
+
+    const metricLabels = { viralPotential:'Viral Potential', engagementLikelihood:'Engagement', shareability:'Shareability', trendRelevance:'Trend Relevance', productionEase:'Production Ease' };
+    const metricsHTML = Object.entries(plan.metrics || item.metrics).map(([k,v]) =>
+      `<div class="metric-row">
+        <span class="metric-name">${metricLabels[k]||k}</span>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:${v}%"></div></div>
+        <span class="metric-val">${v}%</span>
+      </div>`).join('');
+
+    const bgMap = ['rgba(124,58,237,0.15)','rgba(244,114,182,0.12)','rgba(52,211,153,0.12)','rgba(251,146,60,0.12)','rgba(96,165,250,0.12)','rgba(248,113,113,0.12)'];
+
+    const storyboardHTML = (plan.storyboard || item.storyboard).map((f, fi) =>
+      `<div class="storyboard-frame">
+        <div class="frame-visual" style="background:${bgMap[fi % bgMap.length]}">
+          <span class="frame-num">Frame ${f.frame} · ${f.seconds}</span>
+          <span style="font-size:32px">${f.emoji || '🎬'}</span>
+        </div>
+        <div class="frame-desc">
+          <div style="font-weight:500;color:var(--text);margin-bottom:3px;font-size:11px">${escHtml(f.visual)}</div>
+          <div style="color:var(--muted);font-size:10px;font-style:italic">${escHtml(f.audio)}</div>
+        </div>
+      </div>`).join('');
+
+    planEl.innerHTML = `
+      <div class="plan-grid">
+        <div class="plan-section">
+          <div class="plan-section-label">📝 Content Concept</div>
+          <div class="plan-section-content">${escHtml(plan.concept)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">⚡ Opening Hook</div>
+          <div class="plan-section-content" style="font-style:italic;color:var(--accent)">"${escHtml(plan.hook)}"</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">📊 Viral Metrics</div>
+          <div class="plan-section-content">${metricsHTML}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">🚀 Boost Virality</div>
+          <div class="plan-section-content">${escHtml(plan.tipsToBoostViral)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">📋 Content Structure</div>
+          <div class="plan-section-content">${escHtml(plan.structure)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">⚠️ Avoid These Mistakes</div>
+          <div class="plan-section-content">${escHtml(plan.avoidMistakes)}</div>
+        </div>
+      </div>
+      <div class="plan-grid" style="border-top:0.5px solid var(--border)">
+        <div class="plan-section">
+          <div class="plan-section-label">📣 Call to Action</div>
+          <div class="plan-section-content">${escHtml(plan.cta)}</div>
+        </div>
+        <div class="plan-section">
+          <div class="plan-section-label">🕐 Best Time to Post</div>
+          <div class="plan-section-content" style="font-weight:500">${escHtml(plan.bestTime)}</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.8">${escHtml(plan.hashtags)}</div>
+        </div>
+      </div>
+      <div class="storyboard-section">
+        <div class="storyboard-label">🎬 Visual Storyboard</div>
+        <div class="storyboard-grid">${storyboardHTML}</div>
+      </div>`;
+
+  } catch(err) {
+    loadingEl.innerHTML = `<span style="color:var(--red)">Failed to load. Click the card again to retry. (${err.message})</span>`;
+    loadedCards.delete(idx);
+    console.error(err);
+  }
+}
+
+// ─── RESET ───────────────────────────────────────────────
+function resetApp() {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('selector-screen').style.display = 'block';
+  document.getElementById('content-list').innerHTML = '';
+  document.getElementById('error-area').innerHTML = '';
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('custom-niche').value = '';
+  selectedNiche = '';
+  expandedCards.clear();
+  loadedCards.clear();
+  window._viralData = null;
+  updateAnalyzeBtn();
+}
+
+// ─── UTILS ───────────────────────────────────────────────
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────
+updateKeyIndicator();
+if (!getApiKey()) openModal();
+</script>
+</body>
+</html>
+
     --border: rgba(255,255,255,0.08);
     --border2: rgba(255,255,255,0.14);
     --text: #f4f4f5;
