@@ -784,33 +784,48 @@ const STEPS = [
 ];
 
 // ── Real-time search via Serper.dev ──
+async function serperFetch(query, serperKey) {
+  const body = JSON.stringify({ q: query, num: 5, gl: 'us', hl: 'en' });
+  const headers = { 'X-API-KEY': serperKey, 'Content-Type': 'application/json' };
+  const target = 'https://google.serper.dev/search';
+
+  // Try proxies in order
+  const proxies = [
+    () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`, { method: 'POST', headers, body }),
+    () => fetch(`https://corsproxy.io/?${encodeURIComponent(target)}`, { method: 'POST', headers, body }),
+    () => fetch(`https://proxy.cors.sh/${target}`, { method: 'POST', headers: { ...headers, 'x-cors-api-key': 'temp_' + serperKey }, body }),
+  ];
+
+  for (const attempt of proxies) {
+    try {
+      const r = await attempt();
+      if (r.ok) return await r.json();
+    } catch(e) { /* try next */ }
+  }
+  throw new Error('All proxies failed');
+}
+
 async function searchTrends(niche, platforms) {
   const serperKey = getSerperKey();
-  if (!serperKey) return null; // fallback to AI-only if no key
+  if (!serperKey) return null;
 
   const queries = [
     `${niche} viral ${platforms} trending today`,
-    `${niche} most viral content ${new Date().getFullYear()}`,
-    `trending ${niche} ${platforms} this week`
+    `trending ${niche} content ${new Date().getFullYear()}`
   ];
 
   try {
-    const results = await Promise.all(queries.map(q =>
-      fetch('https://google.serper.dev/search', {
-        method: 'POST',
-        headers: { 'X-API-KEY': serperKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q, num: 5, gl: 'us', hl: 'en' })
-      }).then(r => r.json())
-    ));
-
-    // Extract organic results and news
+    // Run queries sequentially to avoid hammering proxies
     const items = [];
-    results.forEach(r => {
-      (r.organic || []).forEach(i => items.push(`- ${i.title}: ${i.snippet} (${i.link})`));
-      (r.news || []).forEach(i => items.push(`- [NEWS] ${i.title}: ${i.snippet} (${i.link})`));
-    });
-
-    return items.slice(0, 20).join('\n');
+    for (const q of queries) {
+      try {
+        const r = await serperFetch(q, serperKey);
+        (r.organic || []).forEach(i => items.push(`- ${i.title}: ${i.snippet}`));
+        (r.news || []).forEach(i => items.push(`- [NEWS] ${i.title}: ${i.snippet}`));
+      } catch(e) { /* skip failed query */ }
+    }
+    if (items.length === 0) throw new Error('No results');
+    return items.slice(0, 15).join('\n');
   } catch(e) {
     console.warn('Serper search failed:', e);
     return null;
@@ -1081,8 +1096,8 @@ Return ONLY a valid JSON object (no markdown, no code fences, no preamble, no tr
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        system: 'You are a JSON-only API. Always respond with raw JSON only — no markdown, no code fences, no backticks. Output must start with { and end with }.',
+        max_tokens: 3000,
+        system: 'You are a JSON-only API. CRITICAL: respond with ONLY a raw JSON object. No markdown. No backticks. No explanations. Start your response with { and end with }. Never use code fences.',
         messages: [{ role: 'user', content: prompt2 }]
       })
     });
@@ -1090,16 +1105,32 @@ Return ONLY a valid JSON object (no markdown, no code fences, no preamble, no tr
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `API error ${res.status}`); }
     const data = await res.json();
     if (data.type === 'error') throw new Error(data.error?.message || 'API error');
+    if (!data.content || !data.content.length) throw new Error('Empty response from API');
     let raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    raw = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    console.log('Card raw response:', raw.slice(0, 200));
+    // Strip all markdown fences aggressively
+    raw = raw.replace(/```json[\s\S]*?```/g, m => m.replace(/```json\s*/,'').replace(/```\s*$/,''));
+    raw = raw.replace(/```[\s\S]*?```/g, m => m.replace(/```\w*\s*/,'').replace(/```\s*$/,''));
+    raw = raw.replace(/`/g, '').trim();
     // Find outermost { } robustly
     let depth = 0, start2 = -1, end2 = -1;
     for (let i = 0; i < raw.length; i++) {
       if (raw[i] === '{') { if (depth === 0) start2 = i; depth++; }
       else if (raw[i] === '}') { depth--; if (depth === 0) { end2 = i; break; } }
     }
-    if (start2 === -1 || end2 === -1) throw new Error('Could not find JSON in response.');
-    const plan = JSON.parse(raw.slice(start2, end2 + 1));
+    if (start2 === -1 || end2 === -1) {
+      console.error('Full card response:', raw);
+      throw new Error('Could not find JSON in response. Raw: ' + raw.slice(0,80));
+    }
+    let plan;
+    try { plan = JSON.parse(raw.slice(start2, end2 + 1)); }
+    catch(pe) {
+      // Try to fix common JSON issues: trailing commas, unescaped quotes
+      let fixed = raw.slice(start2, end2 + 1)
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']');
+      plan = JSON.parse(fixed);
+    }
 
     loadingEl.style.display = 'none';
     planEl.style.display = 'block';
