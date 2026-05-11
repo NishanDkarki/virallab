@@ -572,7 +572,7 @@
     </div>
     <div class="header-right">
       <div class="badge">Powered by Claude + Serper</div>
-      <div class="api-key-indicator" id="serper-indicator" onclick="openSerperModal()" title="Serper.dev API key for real trend data">
+      <div class="api-key-indicator" id="serper-indicator" style="display:none" onclick="openSerperModal()" title="Serper.dev API key for real trend data">
         <div class="dot" id="serper-dot"></div>
         <span id="serper-label">Add Serper key</span>
       </div>
@@ -666,8 +666,8 @@ const platformColors  = { ig:'#e1306c',  tt:'#69c9d0', fb:'#1877f2' };
 // ─── API KEY MANAGEMENT ──────────────────────────────────
 function getApiKey() { return localStorage.getItem('virallab_api_key') || ''; }
 function setApiKey(k) { localStorage.setItem('virallab_api_key', k); }
-function getSerperKey() { return localStorage.getItem('virallab_serper_key') || ''; }
-function setSerperKey(k) { localStorage.setItem('virallab_serper_key', k); }
+function getSerperKey() { return 'a351df6b39b99d8d70a4d3da5c0812bd2ebb1888'; }
+function setSerperKey(k) { /* key hardcoded */ }
 
 function updateKeyIndicator() {
   const key = getApiKey();
