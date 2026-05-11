@@ -810,8 +810,7 @@ async function searchTrends(niche, platforms) {
       (r.news || []).forEach(i => items.push(`- [NEWS] ${i.title}: ${i.snippet} (${i.link})`));
     });
 
-    return items.slice(0, 20).join('
-');
+    return items.slice(0, 20).join('\n');
   } catch(e) {
     console.warn('Serper search failed:', e);
     return null;
@@ -846,15 +845,8 @@ async function startAnalysis() {
   // Search for real trends first
   const realTrends = await searchTrends(selectedNiche, platforms);
   const trendContext = realTrends
-    ? `
-
-Here is REAL data from Google searches about what's trending right now for this niche:
-${realTrends}
-
-Use this real data to ground your analysis. Reference actual trends, topics, and content styles found in these results.`
-    : '
-
-(No live search data available — use your best knowledge of current trends.)';
+    ? `\n\nHere is REAL data from Google searches about what's trending right now for this niche:\n${realTrends}\n\nUse this real data to ground your analysis. Reference actual trends, topics, and content styles found in these results.`
+    : '\n\n(No live search data available — use your best knowledge of current trends.)';
 
   const prompt = `You are ViralLab, an expert viral content analyst and strategist.
 
@@ -1005,11 +997,11 @@ function renderResults(items) {
             <span class="tag tag-${platKey}">${item.platform}</span>
             <span class="tag tag-format">${item.format}</span>
           </div>
-          <div class="card-search-links" style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-            <a href="https://www.tiktok.com/search?q=${encodeURIComponent(item.title)}" target="_blank" style="font-size:10px;color:#69c9d0;border:0.5px solid rgba(105,201,208,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 TikTok</a>
-            <a href="https://www.instagram.com/explore/tags/${encodeURIComponent(item.title.split(' ')[0])}" target="_blank" style="font-size:10px;color:#e1306c;border:0.5px solid rgba(225,48,108,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 Instagram</a>
-            <a href="https://www.google.com/search?q=${encodeURIComponent(item.title + ' ' + item.platform + ' viral')}" target="_blank" style="font-size:10px;color:#60a5fa;border:0.5px solid rgba(96,165,250,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🌐 Google</a>
-            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(item.title)}" target="_blank" style="font-size:10px;color:#fb923c;border:0.5px solid rgba(251,146,60,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">▶ YouTube</a>
+          <div class="card-search-links" style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
+            <a href="#" onclick="openSearch('tiktok','${escHtml(item.title)}');return false;" style="font-size:10px;color:#69c9d0;border:0.5px solid rgba(105,201,208,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 TikTok</a>
+            <a href="#" onclick="openSearch('instagram','${escHtml(item.title)}');return false;" style="font-size:10px;color:#e1306c;border:0.5px solid rgba(225,48,108,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🔍 Instagram</a>
+            <a href="#" onclick="openSearch('google','${escHtml(item.title)} ${escHtml(item.platform)} viral');return false;" style="font-size:10px;color:#60a5fa;border:0.5px solid rgba(96,165,250,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">🌐 Google</a>
+            <a href="#" onclick="openSearch('youtube','${escHtml(item.title)}');return false;" style="font-size:10px;color:#fb923c;border:0.5px solid rgba(251,146,60,0.3);border-radius:20px;padding:2px 8px;text-decoration:none">▶ YouTube</a>
           </div>
           <div class="card-stats">
             <div class="stat"><div class="dot" style="background:#a78bfa"></div><strong>${item.views}</strong> views</div>
@@ -1291,6 +1283,18 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeModal();
   }
 });
+
+// ─── SEARCH HELPERS ─────────────────────────────────────
+function openSearch(platform, query) {
+  const q = encodeURIComponent(query);
+  const urls = {
+    tiktok: 'https://www.tiktok.com/search?q=' + q,
+    instagram: 'https://www.instagram.com/explore/tags/' + encodeURIComponent(query.split(' ')[0]),
+    google: 'https://www.google.com/search?q=' + q,
+    youtube: 'https://www.youtube.com/results?search_query=' + q
+  };
+  window.open(urls[platform], '_blank');
+}
 
 // ─── INIT ────────────────────────────────────────────────
 updateKeyIndicator();
