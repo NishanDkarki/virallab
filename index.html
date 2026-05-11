@@ -458,10 +458,37 @@
   .storyboard-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
   .storyboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .storyboard-frame { background: var(--bg3); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .frame-visual { aspect-ratio: 9/16; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; font-size: 28px; position: relative; text-align: center; }
-  .frame-num { position: absolute; top: 8px; left: 10px; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); }
+  .frame-visual { aspect-ratio: 9/16; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; font-size: 28px; position: relative; text-align: center; overflow: hidden; }
+  .frame-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; opacity: 0; transition: opacity 0.5s ease; }
+  .frame-visual img.loaded { opacity: 1; }
+  .frame-visual .frame-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%); pointer-events: none; }
+  .frame-visual .frame-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; transition: opacity 0.3s; }
+  .frame-visual .frame-placeholder.hidden { opacity: 0; }
+  .frame-num { position: absolute; top: 8px; left: 10px; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.9); z-index: 2; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+  .frame-time { position: absolute; top: 8px; right: 10px; font-size: 9px; color: rgba(255,255,255,0.7); z-index: 2; }
   .frame-caption { font-size: 10px; line-height: 1.4; color: rgba(255,255,255,0.7); margin-top: 8px; }
   .frame-desc { padding: 10px; font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 0.5px solid var(--border); }
+  .frame-audio { font-size: 10px; color: var(--accent); padding: 6px 10px; border-top: 0.5px solid var(--border); display: flex; align-items: center; gap: 5px; }
+  /* Video preview strip */
+  .video-preview { border-top: 0.5px solid var(--border); padding: 20px 24px; }
+  .video-preview-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 14px; }
+  .video-strip { display: flex; gap: 4px; height: 80px; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; }
+  .video-strip-frame { flex: 1; overflow: hidden; position: relative; }
+  .video-strip-frame img { width: 100%; height: 100%; object-fit: cover; }
+  .video-strip-frame .strip-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+  .video-strip:hover .strip-overlay { opacity: 1; }
+  .play-btn { width: 32px; height: 32px; background: rgba(167,139,250,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  /* Slideshow modal */
+  .slideshow-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .slideshow-modal.hidden { display: none; }
+  .slideshow-img { max-height: 70vh; max-width: 400px; width: 100%; object-fit: contain; border-radius: 12px; }
+  .slideshow-caption { color: var(--text); font-size: 14px; margin-top: 16px; text-align: center; max-width: 360px; }
+  .slideshow-audio { color: var(--accent); font-size: 12px; margin-top: 6px; font-style: italic; }
+  .slideshow-nav { display: flex; align-items: center; gap: 20px; margin-top: 20px; }
+  .slideshow-nav button { background: var(--card); border: 0.5px solid var(--border2); border-radius: 8px; padding: 8px 20px; color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; transition: all 0.15s; }
+  .slideshow-nav button:hover { background: var(--bg3); }
+  .slideshow-counter { color: var(--muted); font-size: 13px; min-width: 60px; text-align: center; }
+  .slideshow-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
 
   /* ERROR */
   .error-banner {
@@ -487,6 +514,20 @@
 </head>
 <body>
 
+<!-- SLIDESHOW MODAL -->
+<div class="slideshow-modal hidden" id="slideshow-modal">
+  <button class="slideshow-close" onclick="closeSlideshow()">✕</button>
+  <img class="slideshow-img" id="slideshow-img" src="" alt="">
+  <div class="slideshow-caption" id="slideshow-caption"></div>
+  <div class="slideshow-audio" id="slideshow-audio"></div>
+  <div class="slideshow-nav">
+    <button onclick="slideshowStep(-1)">← Prev</button>
+    <span class="slideshow-counter" id="slideshow-counter">1 / 6</span>
+    <button onclick="slideshowStep(1)">Next →</button>
+  </div>
+  <div style="margin-top:12px;font-size:11px;color:var(--muted)">Press ← → arrow keys to navigate · ESC to close</div>
+</div>
+
 <!-- API KEY MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -504,6 +545,23 @@
   </div>
 </div>
 
+<!-- SERPER KEY MODAL -->
+<div class="modal-overlay" id="serper-modal-overlay">
+  <div class="modal">
+    <h2>🔍 Enter your Serper API key</h2>
+    <p>Serper.dev lets ViralLab search Google in real time to find actually trending content — not just AI-simulated results. Get <strong>2,500 free searches</strong> with no credit card.</p>
+    <input type="password" id="serper-key-input" placeholder="your-serper-key…" autocomplete="off" spellcheck="false">
+    <div class="modal-note">
+      <strong>🆓 Free tier:</strong> 2,500 searches/month free at <a href="https://serper.dev" target="_blank">serper.dev</a> — no credit card needed.<br><br>
+      Sign up → Dashboard → Copy your API key.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSerperModal()">Skip (use AI only)</button>
+      <button class="btn-save" onclick="saveSerperKey()">Save & Continue →</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- HEADER -->
@@ -513,10 +571,14 @@
       ViralLab
     </div>
     <div class="header-right">
-      <div class="badge">Powered by Claude</div>
+      <div class="badge">Powered by Claude + Serper</div>
+      <div class="api-key-indicator" id="serper-indicator" onclick="openSerperModal()" title="Serper.dev API key for real trend data">
+        <div class="dot" id="serper-dot"></div>
+        <span id="serper-label">Add Serper key</span>
+      </div>
       <div class="api-key-indicator" id="key-indicator" onclick="openModal()">
         <div class="dot" id="key-dot"></div>
-        <span id="key-label">Add API key</span>
+        <span id="key-label">Add Claude key</span>
       </div>
     </div>
   </header>
@@ -604,6 +666,8 @@ const platformColors  = { ig:'#e1306c',  tt:'#69c9d0', fb:'#1877f2' };
 // ─── API KEY MANAGEMENT ──────────────────────────────────
 function getApiKey() { return localStorage.getItem('virallab_api_key') || ''; }
 function setApiKey(k) { localStorage.setItem('virallab_api_key', k); }
+function getSerperKey() { return localStorage.getItem('virallab_serper_key') || ''; }
+function setSerperKey(k) { localStorage.setItem('virallab_serper_key', k); }
 
 function updateKeyIndicator() {
   const key = getApiKey();
@@ -612,15 +676,39 @@ function updateKeyIndicator() {
   const banner = document.getElementById('no-key-banner');
   if (key) {
     dot.className = 'dot connected';
-    label.textContent = 'API key set ✓';
+    label.textContent = 'Claude key ✓';
     if (banner) banner.style.display = 'none';
   } else {
     dot.className = 'dot';
-    label.textContent = 'Add API key';
+    label.textContent = 'Add Claude key';
     if (banner) banner.style.display = 'flex';
   }
+  // Serper indicator
+  const sk = getSerperKey();
+  const sd = document.getElementById('serper-dot');
+  const sl = document.getElementById('serper-label');
+  if (sd) sd.className = sk ? 'dot connected' : 'dot';
+  if (sl) sl.textContent = sk ? 'Serper key ✓' : 'Add Serper key';
   updateAnalyzeBtn();
 }
+
+function openSerperModal() {
+  document.getElementById('serper-modal-overlay').classList.add('show');
+  document.getElementById('serper-key-input').value = getSerperKey();
+  setTimeout(() => document.getElementById('serper-key-input').focus(), 200);
+}
+function closeSerperModal() {
+  document.getElementById('serper-modal-overlay').classList.remove('show');
+}
+function saveSerperKey() {
+  const val = document.getElementById('serper-key-input').value.trim();
+  setSerperKey(val);
+  closeSerperModal();
+  updateKeyIndicator();
+}
+document.getElementById('serper-modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSerperModal();
+});
 
 function openModal() {
   const overlay = document.getElementById('modal-overlay');
@@ -977,17 +1065,56 @@ Return ONLY a valid JSON object (no markdown, no code fences, no preamble, no tr
 
     const bgMap = ['rgba(124,58,237,0.15)','rgba(244,114,182,0.12)','rgba(52,211,153,0.12)','rgba(251,146,60,0.12)','rgba(96,165,250,0.12)','rgba(248,113,113,0.12)'];
 
-    const storyboardHTML = (plan.storyboard || item.storyboard).map((f, fi) =>
-      `<div class="storyboard-frame">
-        <div class="frame-visual" style="background:${bgMap[fi % bgMap.length]}">
-          <span class="frame-num">Frame ${f.frame} · ${f.seconds}</span>
-          <span style="font-size:32px">${f.emoji || '🎬'}</span>
-        </div>
-        <div class="frame-desc">
-          <div style="font-weight:500;color:var(--text);margin-bottom:3px;font-size:11px">${escHtml(f.visual)}</div>
-          <div style="color:var(--muted);font-size:10px;font-style:italic">${escHtml(f.audio)}</div>
-        </div>
-      </div>`).join('');
+    const sbFrames = plan.storyboard || item.storyboard;
+    // Build image prompts for Pollinations.ai
+    function makeImgUrl(frame, niche, platform) {
+      const q = encodeURIComponent(`${frame.visual}, ${niche} content creator, ${platform} style, cinematic, vibrant, professional photography, vertical format`);
+      return `https://image.pollinations.ai/prompt/${q}?width=360&height=640&nologo=true&seed=${Math.floor(Math.random()*99999)}`;
+    }
+
+    const storyboardHTML = `
+      <div class="video-strip" onclick="openSlideshow(${idx}, event)">
+        ${sbFrames.map((f, fi) => `
+          <div class="video-strip-frame">
+            <img src="${makeImgUrl(f, selectedNiche, item.platform)}" loading="lazy" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover">
+            <div class="strip-overlay"><div class="play-btn">▶</div></div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">▶ Click to preview as slideshow · AI images via Pollinations.ai</div>
+      <div style="margin-top:16px" class="storyboard-grid">
+        ${sbFrames.map((f, fi) => `
+          <div class="storyboard-frame">
+            <div class="frame-visual" style="background:${bgMap[fi % bgMap.length]}">
+              <span class="frame-num">Frame ${f.frame}</span>
+              <span class="frame-time">${f.seconds}</span>
+              <div class="frame-placeholder" id="ph-${idx}-${fi}">
+                <span style="font-size:28px">${f.emoji || '🎬'}</span>
+                <span style="font-size:9px;color:rgba(255,255,255,0.4)">Loading image…</span>
+              </div>
+              <img
+                src="${makeImgUrl(f, selectedNiche, item.platform)}"
+                loading="lazy"
+                onload="this.classList.add('loaded'); const ph=document.getElementById('ph-${idx}-${fi}'); if(ph) ph.classList.add('hidden');"
+                onerror="this.style.display='none'"
+              >
+              <div class="frame-overlay"></div>
+            </div>
+            <div class="frame-desc">
+              <div style="font-weight:500;color:var(--text);margin-bottom:3px;font-size:11px">${escHtml(f.visual)}</div>
+            </div>
+            <div class="frame-audio">🎙 ${escHtml(f.audio)}</div>
+          </div>`).join('')}
+      </div>`;
+
+    // Store frames for slideshow
+    window._slideshows = window._slideshows || {};
+    window._slideshows[idx] = sbFrames.map(f => ({
+      img: makeImgUrl(f, selectedNiche, item.platform),
+      caption: f.visual,
+      audio: f.audio,
+      seconds: f.seconds,
+      frame: f.frame
+    }));
 
     planEl.innerHTML = `
       <div class="plan-grid">
@@ -1028,8 +1155,8 @@ Return ONLY a valid JSON object (no markdown, no code fences, no preamble, no tr
         </div>
       </div>
       <div class="storyboard-section">
-        <div class="storyboard-label">🎬 Visual Storyboard</div>
-        <div class="storyboard-grid">${storyboardHTML}</div>
+        <div class="storyboard-label">🎬 AI Storyboard · Click filmstrip to preview as slideshow</div>
+        ${storyboardHTML}
       </div>`;
 
   } catch(err) {
@@ -1060,6 +1187,53 @@ function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ─── SLIDESHOW ───────────────────────────────────────────
+let _ssIdx = 0, _ssCurrent = 0;
+
+function openSlideshow(cardIdx, e) {
+  if (e) e.stopPropagation();
+  _ssIdx = cardIdx;
+  _ssCurrent = 0;
+  const modal = document.getElementById('slideshow-modal');
+  modal.classList.remove('hidden');
+  renderSlide();
+}
+
+function closeSlideshow() {
+  document.getElementById('slideshow-modal').classList.add('hidden');
+}
+
+function slideshowStep(dir) {
+  const frames = (window._slideshows || {})[_ssIdx] || [];
+  _ssCurrent = Math.max(0, Math.min(frames.length - 1, _ssCurrent + dir));
+  renderSlide();
+}
+
+function renderSlide() {
+  const frames = (window._slideshows || {})[_ssIdx] || [];
+  if (!frames.length) return;
+  const f = frames[_ssCurrent];
+  const img = document.getElementById('slideshow-img');
+  img.style.opacity = '0';
+  img.src = f.img;
+  img.onload = () => { img.style.opacity = '1'; };
+  img.style.transition = 'opacity 0.3s';
+  document.getElementById('slideshow-caption').textContent = `Frame ${f.frame} (${f.seconds}) — ${f.caption}`;
+  document.getElementById('slideshow-audio').textContent = '🎙 ' + f.audio;
+  document.getElementById('slideshow-counter').textContent = `${_ssCurrent + 1} / ${frames.length}`;
+}
+
+document.addEventListener('keydown', function(e) {
+  const modal = document.getElementById('slideshow-modal');
+  if (!modal.classList.contains('hidden')) {
+    if (e.key === 'ArrowRight') slideshowStep(1);
+    if (e.key === 'ArrowLeft') slideshowStep(-1);
+    if (e.key === 'Escape') closeSlideshow();
+  } else {
+    if (e.key === 'Escape') closeModal();
+  }
+});
 
 // ─── INIT ────────────────────────────────────────────────
 updateKeyIndicator();
